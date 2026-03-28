@@ -9,39 +9,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 🔥 Auto URL generate
+      # 🔥 Auto Website URL generate
       - name: Set Website URL
         run: |
           echo "SITE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_ENV
 
-      # 🔥 Inject URL
+      # 🔥 Inject URL into app
       - name: Inject URL
         run: |
           sed -i "s|LOAD_URL|$SITE_URL|g" android/app/src/main/java/com/star/app/MainActivity.java
 
-      # ✅ Java setup
+      # ✅ Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # ✅ Android SDK setup (IMPORTANT 🔥)
+      # ✅ Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # ✅ Gradle setup (FIXED)
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+      # ✅ Install Gradle 7.5 (FIXED VERSION)
+      - name: Setup Gradle 7.5
+        run: |
+          wget https://services.gradle.org/distributions/gradle-7.5-bin.zip
+          unzip gradle-7.5-bin.zip
 
       # 🔥 Build APK
       - name: Build APK
         run: |
           cd android
-          gradle assembleDebug
+          ../gradle-7.5/bin/gradle assembleDebug
 
       # 📦 Upload APK
       - name: Upload APK
