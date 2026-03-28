@@ -33,23 +33,22 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # Gradle 7.5
+      # Gradle setup (IMPORTANT FIX)
       - name: Setup Gradle
-        run: |
-          wget https://services.gradle.org/distributions/gradle-7.5-bin.zip
-          unzip gradle-7.5-bin.zip
+        uses: gradle/gradle-build-action@v3
 
-      # 🔐 Decode Keystore
+      # 🔐 Decode Keystore (FIXED PATH)
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > my-release-key.jks
+          mkdir -p android
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > android/my-release-key.jks
 
       # 🔐 Build Signed APK
       - name: Build Signed APK
         run: |
           cd android
-          ../gradle-7.5/bin/gradle assembleRelease \
-          -Pandroid.injected.signing.store.file=../my-release-key.jks \
+          ./gradlew assembleRelease \
+          -Pandroid.injected.signing.store.file=my-release-key.jks \
           -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
           -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
           -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
@@ -60,3 +59,5 @@ jobs:
         with:
           name: app-release
           path: android/app/build/outputs/apk/release/app-release.apk
+
+          
