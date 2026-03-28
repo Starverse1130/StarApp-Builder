@@ -1,0 +1,50 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 🔥 Auto URL generate (repo se)
+      - name: Set Website URL
+        run: |
+          echo "SITE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_ENV
+
+      # 🔥 Replace LOAD_URL in code
+      - name: Inject URL
+        run: |
+          sed -i "s|LOAD_URL|$SITE_URL|g" android/app/src/main/java/com/star/app/MainActivity.java
+
+      # Java setup
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Gradle install (no Android Studio needed)
+      - name: Setup Gradle
+        run: |
+          curl -s https://services.gradle.org/distributions/gradle-7.5-bin.zip -o gradle.zip
+          unzip gradle.zip
+          mv gradle-7.5 gradle
+
+      # 🔥 Build APK
+      - name: Build APK
+        run: |
+          cd android
+          ../gradle/bin/gradle assembleDebug
+
+      # 📦 Upload APK
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
