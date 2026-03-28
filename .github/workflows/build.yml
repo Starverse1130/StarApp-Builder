@@ -10,37 +10,38 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 🔥 Auto URL generate (repo se)
+      # 🔥 Auto URL generate
       - name: Set Website URL
         run: |
           echo "SITE_URL=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_ENV
 
-      # 🔥 Replace LOAD_URL in code
+      # 🔥 Inject URL
       - name: Inject URL
         run: |
           sed -i "s|LOAD_URL|$SITE_URL|g" android/app/src/main/java/com/star/app/MainActivity.java
 
-      # Java setup
+      # ✅ Java setup
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Gradle install (no Android Studio needed)
+      # ✅ Android SDK setup (IMPORTANT 🔥)
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ✅ Gradle setup (FIXED)
       - name: Setup Gradle
-        run: |
-          curl -s https://services.gradle.org/distributions/gradle-7.5-bin.zip -o gradle.zip
-          unzip gradle.zip
-          mv gradle-7.5 gradle
+        uses: gradle/gradle-build-action@v2
 
       # 🔥 Build APK
       - name: Build APK
         run: |
           cd android
-          ../gradle/bin/gradle assembleDebug
+          gradle assembleDebug
 
       # 📦 Upload APK
       - name: Upload APK
